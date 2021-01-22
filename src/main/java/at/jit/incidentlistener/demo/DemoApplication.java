@@ -1,8 +1,14 @@
 package at.jit.incidentlistener.demo;
 
 import org.camunda.bpm.application.ProcessApplication;
+import org.camunda.bpm.engine.AuthorizationService;
 import org.camunda.bpm.engine.RepositoryService;
 import org.camunda.bpm.engine.RuntimeService;
+import org.camunda.bpm.engine.authorization.Authorization;
+import org.camunda.bpm.engine.authorization.Permission;
+import org.camunda.bpm.engine.authorization.Permissions;
+import org.camunda.bpm.engine.authorization.Resource;
+import org.camunda.bpm.engine.authorization.Resources;
 import org.camunda.bpm.spring.boot.starter.SpringBootProcessApplication;
 import org.camunda.bpm.spring.boot.starter.event.PostDeployEvent;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +22,9 @@ import java.util.Map;
 @SpringBootApplication
 @ProcessApplication
 public class DemoApplication extends SpringBootProcessApplication {
+    public static final int PATH_1_1_INSTANCE_COUNT = 20;
+    public static final int PATH_1_2_INSTANCE_COUNT = 30;
+    public static final int PATH_2_INSTANCE_COUNT = 150;
     @Autowired
     private RuntimeService runtimeService;
 
@@ -28,16 +37,32 @@ public class DemoApplication extends SpringBootProcessApplication {
 
     @EventListener
     private void processPostDeploy(final PostDeployEvent evt) {
-        System.out.println("X");
+        setupOptimizeAuthorization(evt);
+        createTestData();
+    }
 
-        for (int i=0; i < 20; i++) {
-            startProcess("1", "1.1", String.format("Path 1.1, instance %d", i+1));
+    private void setupOptimizeAuthorization(PostDeployEvent evt) {
+        final AuthorizationService authService = evt.getProcessEngine().getAuthorizationService();
+        final Authorization auth = authService.createNewAuthorization(Authorization.AUTH_TYPE_GLOBAL);
+        auth.setUserId("*");
+        auth.setResource(Resources.APPLICATION);
+        auth.setResourceId("optimize");
+        auth.addPermission(Permissions.ALL);
+        authService.saveAuthorization(auth);
+    }
+
+    private void createTestData() {
+        for (int i = 0; i < PATH_1_1_INSTANCE_COUNT; i++) {
+            startProcess("1", "1.1",
+                    String.format("Path 1.1, instance %d/%d", i+1, PATH_1_1_INSTANCE_COUNT));
         }
-        for (int i=0; i < 30; i++) {
-            startProcess("1", "1.2", String.format("Path 1.2, instance %d", i + 1));
+        for (int i = 0; i < PATH_1_2_INSTANCE_COUNT; i++) {
+            startProcess("1", "1.2",
+                    String.format("Path 1.2, instance %d/%d", i + 1, PATH_1_2_INSTANCE_COUNT));
         }
-        for (int i=0; i < 150; i++) {
-            startProcess("2", null, String.format("Path 2, instance %d", i + 1));
+        for (int i = 0; i < PATH_2_INSTANCE_COUNT; i++) {
+            startProcess("2", null,
+                    String.format("Path 2, instance %d/%d", i + 1, PATH_2_INSTANCE_COUNT));
         }
     }
 
