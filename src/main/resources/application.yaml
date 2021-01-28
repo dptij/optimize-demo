@@ -5,3 +5,27 @@ camunda.bpm:
     firstName: Demo
   filter:
     create: All tasks
+incident-listener:
+  intervalMs: 1000
+  url: http://localhost:8080/camunda
+  fallbackMailReceiver: TODO
+  username: TODO
+  password: TODO
+  host: TODO
+  port: 10000
+  mailSender: TODO
+  subject: Incident Report Camunda
+  mailBodyTemplate: |
+    An error occured in at least one of your processes!
+    Please check the following processes in your Camunda Cockpit:
+
+    @INCIDENTS
+
+    ******************** AUTOMATED MESSAGE ********************
+  incidentTemplate: |
+    Process Activity: @ACTIVITY
+    Process Instance ID: @PROCESS_INSTANCE_ID
+    Incident Message: @MESSAGE
+    Incident Type: @INCIDENT_TYPE
+    Time of Occurrence: @TIME
+    Link to Process Instance: @URL

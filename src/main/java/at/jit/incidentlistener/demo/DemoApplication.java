@@ -22,7 +22,9 @@ import java.util.Map;
 public class DemoApplication extends SpringBootProcessApplication {
     public static final int PATH_1_1_INSTANCE_COUNT = 20;
     public static final int PATH_1_2_INSTANCE_COUNT = 30;
-    public static final int PATH_2_INSTANCE_COUNT = 150;
+    public static final int PATH_2_FAST_INSTANCE_COUNT = 150;
+    public static final int PATH_2_SLOW_INSTANCE_COUNT = 5;
+
     @Autowired
     private RuntimeService runtimeService;
 
@@ -52,23 +54,35 @@ public class DemoApplication extends SpringBootProcessApplication {
     private void createTestData() {
         for (int i = 0; i < PATH_1_1_INSTANCE_COUNT; i++) {
             startProcess("1", "1.1",
-                    String.format("Path 1.1, instance %d/%d", i+1, PATH_1_1_INSTANCE_COUNT));
+                    String.format("Path 1.1, instance %d/%d", i+1, PATH_1_1_INSTANCE_COUNT), false);
         }
         for (int i = 0; i < PATH_1_2_INSTANCE_COUNT; i++) {
             startProcess("1", "1.2",
-                    String.format("Path 1.2, instance %d/%d", i + 1, PATH_1_2_INSTANCE_COUNT));
+                    String.format("Path 1.2, instance %d/%d", i + 1, PATH_1_2_INSTANCE_COUNT), false);
         }
-        for (int i = 0; i < PATH_2_INSTANCE_COUNT; i++) {
+        for (int i = 0; i < PATH_2_FAST_INSTANCE_COUNT; i++) {
             startProcess("2", null,
-                    String.format("Path 2, instance %d/%d", i + 1, PATH_2_INSTANCE_COUNT));
+                    String.format("Path 2 (fast), instance %d/%d", i + 1, PATH_2_FAST_INSTANCE_COUNT), false);
         }
+        /**
+         * Slow process instances (start)
+         */
+        for (int i=0; i < PATH_2_SLOW_INSTANCE_COUNT; i++) {
+            startProcess("2", null,
+                    String.format("Path 2 (slow), instance %d/%d", i + 1, PATH_2_SLOW_INSTANCE_COUNT), true);
+        }
+        /**
+         * Slow process instances (end)
+         */
+
     }
 
     private void startProcess(final String path, final String subPath,
-                              final String businessKey) {
+                              final String businessKey, boolean slowDown) {
         final Map<String, Object> vars = new HashMap<>();
         vars.put("path", path);
         vars.put("subPath", subPath);
-        runtimeService.startProcessInstanceByKey("TestOptimizeProcess", businessKey, vars);
+        vars.put("slowDown", slowDown);
+        runtimeService.startProcessInstanceByKey("TestOptimizeProcessNoWait", businessKey, vars);
     }
 }
